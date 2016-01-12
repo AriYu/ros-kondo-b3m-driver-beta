@@ -30,7 +30,7 @@ exit(-1);
     newtio_.c_cc[VMIN] = 1;
 	newtio_.c_cc[VTIME] = 0;
 	newtio_.c_cflag = baudRate | CS8 | CREAD | CLOCAL;
-	newtio_.c_iflag = IGNBRK | IGNPAR;
+	newtio_.c_iflag = IGNPAR;
 	newtio_.c_oflag = 0; // rawモード
 	newtio_.c_lflag = 0; // 非カノニカル入力
 

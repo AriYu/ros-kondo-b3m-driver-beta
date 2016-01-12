@@ -21,11 +21,10 @@ class b3m_servo_driver
   }
   void joint_cb(const sensor_msgs::JointStateConstPtr& joint_state)
   {
-    short angle = (short)(joint_state->position[0] * 100);
+    short angle = (short)(joint_state->position[0] * 100 * 100);
     short target_time = 0;
-    ROS_INFO("Angle : %d\n",angle);
+    //ROS_INFO("Angle : %d\n",angle);
     servo_.b3mSetPosition(&port_, servo_id_, angle, target_time);
-    usleep(1000);
   }
   void run()
   {

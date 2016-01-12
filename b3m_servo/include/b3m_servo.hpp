@@ -33,7 +33,22 @@ class KondoB3mServo{
     unsigned char receiveData[5];
 
     ChangeServoStatus(0x00, 1, servoID, mode, sendData);
-    return write(port->fd_, sendData, sizeof(sendData));
+    printf("tom)send : ");
+    for(int i = 0; i < sizeof(sendData); ++i)
+	{
+	  printf("%x  ", sendData[i]);
+	}
+    printf("\n");
+    write(port->fd_, sendData, sizeof(sendData));
+    read(port->fd_, receiveData, sizeof(receiveData));
+    printf("tom)received : ");
+    for(int i = 0; i < sizeof(receiveData); ++i)
+	{
+	  printf("%x  ", receiveData[i]);
+	}
+    printf("\n");
+    printf("-------------------------------\n");
+    return 0;
   }
 
   void ChangeServoStatus(unsigned char option, unsigned char count, unsigned char servoID, unsigned char mode, unsigned char data[])
@@ -51,8 +66,24 @@ class KondoB3mServo{
   int b3mTrajectoryModeSet(SerialPort *port, unsigned char servoID, unsigned char mode)
   {
     unsigned char sendData[8];
+    unsigned char receiveData[5];
     ChangeTrajectoryMode(0x00, 1, servoID, mode, sendData);
-    return write(port->fd_, sendData, sizeof(sendData));
+    printf("trm)send : ");
+    for(int i = 0; i < sizeof(sendData); ++i)
+	{
+	  printf("%x  ", sendData[i]);
+	}
+    printf("\n");
+    write(port->fd_, sendData, sizeof(sendData));
+    read(port->fd_, receiveData, sizeof(receiveData));
+    printf("trm)received : ");
+    for(int i = 0; i < sizeof(receiveData); ++i)
+	{
+	  printf("%x  ", receiveData[i]);
+	}
+    printf("\n");
+    printf("-------------------------------\n");
+    return 0;
   }
 
   void  ChangeTrajectoryMode(unsigned char option, unsigned char count, unsigned char servoID, unsigned char mode, unsigned char data[])
@@ -70,8 +101,24 @@ class KondoB3mServo{
   int b3mGainParamSet(SerialPort *port, unsigned char servoID, unsigned char mode)
   {
     unsigned char sendData[8];
+    unsigned char receiveData[5];
     ChangeServoGain(0x00, 1, servoID, mode, sendData);
-    return write(port->fd_, sendData, sizeof(sendData));
+    write(port->fd_, sendData, sizeof(sendData));
+    printf("gp)send : ");
+    for(int i = 0; i < sizeof(sendData); ++i)
+	{
+	  printf("%x  ", sendData[i]);
+	}
+    printf("\n");
+    read(port->fd_, receiveData, sizeof(receiveData));
+    printf("gp)received : ");
+    for(int i = 0; i < sizeof(receiveData); ++i)
+	{
+	  printf("%x  ", receiveData[i]);
+	}
+    printf("\n");
+    printf("-------------------------------\n");
+    return 0;
   }
 
   void ChangeServoGain( unsigned char option, unsigned char count, unsigned char servoID, unsigned char mode, unsigned char data[])
@@ -89,8 +136,27 @@ class KondoB3mServo{
   int b3mSetPosition(SerialPort *port, unsigned char servoID, short angle, short target_time)
   {
     unsigned char sendData[9];
+    unsigned char receiveData[7];
     SetServoPosition(0x00, servoID, angle, target_time, sendData);
-    return write(port->fd_, sendData, sizeof(sendData));
+    write(port->fd_, sendData, sizeof(sendData));
+
+    printf("sp)send : ");
+    for(int i = 0; i < sizeof(sendData); ++i)
+	{
+	  printf("%x  ", sendData[i]);
+	}
+    printf("\n");
+
+    read(port->fd_, receiveData, sizeof(receiveData));
+
+    printf("sp)received : ");
+    for(int i = 0; i < sizeof(receiveData); ++i)
+	{
+	  printf("%x  ", receiveData[i]);
+	}
+    printf("\n");
+    printf("-------------------------------\n");
+    return 0;
   }
 
   void SetServoPosition(unsigned char option, unsigned char servoID, short angle, short target_time, unsigned char data[])
