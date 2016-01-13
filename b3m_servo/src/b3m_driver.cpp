@@ -13,7 +13,7 @@ class b3m_servo_driver
   b3m_servo_driver(ros::NodeHandle nh, std::string portName, int baudrate, int num, char** actuators_name)
       : nh_(nh), rate_(20), port_(portName, baudrate)
   {
-    for (int i=0; i<num; i++) {
+    for (int i = 0; i < num; i++) {
       boost::shared_ptr<KondoB3mServo> actuator(new KondoB3mServo(std::string(actuators_name[i])));
       actuator_vector_.push_back(actuator);
 	}
@@ -33,6 +33,7 @@ class b3m_servo_driver
     for (int i = 0; i < actuator_vector_.size(); ++i) {
       short angle = (short)(joint_state->position[i] * 100 * 100);
       actuator_vector_[i]->b3mSetPosition(&port_, angle, target_time);
+      usleep(1000);
     }
   }
 
@@ -63,10 +64,10 @@ class b3m_servo_driver
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "b3m_servo_node");
+  ros::init(argc, argv, "b3m_driver");
   ros::NodeHandle nh;
   
-  b3m_servo_driver  driver(nh, "/dev/ttyUSB0", B115200, argc, argv);
+  b3m_servo_driver  driver(nh, "/dev/ttyUSB0", B115200, argc-1, &argv[1]);
   driver.run();
 
 

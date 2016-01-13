@@ -31,14 +31,17 @@ class KondoB3mServo{
       id_ = (unsigned char)id_int;
       ROS_INFO("id: %d", id_);
     }
+
 	if (nh.getParam("joint_name", joint_name_)) {
-	    ROS_INFO("joint_name: %s", joint_name_.c_str());
+      ROS_INFO("joint_name: %s", joint_name_.c_str());	    
 	}
+
 	if (nh.getParam("min_angle", min_angle_)) {
-	    ROS_INFO("min_angle: %d", min_angle_);
+      ROS_INFO("min_angle: %d", min_angle_);
 	}
+
 	if (nh.getParam("max_angle", max_angle_)) {
-	    ROS_INFO("max_angle: %d", max_angle_);
+      ROS_INFO("max_angle: %d", max_angle_);
 	}
   }
 
