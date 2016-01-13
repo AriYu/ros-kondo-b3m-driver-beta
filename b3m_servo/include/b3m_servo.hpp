@@ -239,7 +239,7 @@ class KondoB3mServoMultiCtrl
     SetServoPositionMulti(0x00, num_of_servo_, angles, target_time, sendData);
     write(port->fd_, sendData, sizeof(sendData));
 
-    printf("sp)send : ");
+    printf("spM)send : ");
     for(int i = 0; i < sizeof(sendData); ++i)
 	{
 	  printf("%x  ", sendData[i]);
