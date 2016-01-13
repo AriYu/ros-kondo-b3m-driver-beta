@@ -230,17 +230,18 @@ class KondoB3mServoMultiCtrl
   {
     actuator_vector_ = actuator_vector;
     num_of_servo_ = actuator_vector_.size();
-    size_of_data_ = actuator_vector_.size() * 3 + 3;
+    size_of_data_ = actuator_vector_.size() * 3 + 6;
   }
   
   void b3mSetPositionMulti(SerialPort *port, std::vector<short> angles, short target_time)
   {
     unsigned char *sendData = new unsigned char[size_of_data_];
     SetServoPositionMulti(0x00, num_of_servo_, angles, target_time, sendData);
-    write(port->fd_, sendData, sizeof(sendData));
+    write(port->fd_, sendData, size_of_data_);
 
+    ROS_INFO("size_of_data : %d", size_of_data_);
     printf("spM)send : ");
-    for(int i = 0; i < sizeof(sendData); ++i)
+    for(int i = 0; i < size_of_data_; ++i)
 	{
 	  printf("%x  ", sendData[i]);
 	}
@@ -254,6 +255,14 @@ class KondoB3mServoMultiCtrl
     data[2]  = (unsigned char)0x00; // OPTION
     for (int i = 0; i < num_of_servo_; ++i) {
       data[3 + 3*i] = (unsigned char)actuator_vector_[i]->id_;
+      if(angles[i] > actuator_vector_[i]->max_angle_*100)
+      {
+        angles[i] = actuator_vector_[i]->max_angle_*100;
+      }
+      if(angles[i] < actuator_vector_[i]->min_angle_*100)
+      {
+        angles[i] = actuator_vector_[i]->min_angle_*100;
+      }
       data[4 + 3*i] = (unsigned char)(angles[i]&0x00FF); // POS_L
       data[5 + 3*i] = (unsigned char)((angles[i]&0xFF00)>>8); // POS_H
     }

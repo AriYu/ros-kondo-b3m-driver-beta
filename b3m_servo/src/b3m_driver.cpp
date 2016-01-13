@@ -41,6 +41,7 @@ class b3m_servo_driver
       angles_[i] = (short)(joint_state->position[i] * 100 * 100);
     }
     multi_ctrl->b3mSetPositionMulti(&port_, angles_, target_time);
+    usleep(10000);
     // for (int i = 0; i < actuator_vector_.size(); ++i) {
     //   short angle = (short)(joint_state->position[i] * 100 * 100);
     //   ROS_INFO("id : %d, Angle : %d", i, angle);
