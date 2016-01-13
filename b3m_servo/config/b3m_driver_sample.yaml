@@ -1,11 +1,11 @@
 joint_0_driver:
   joint_name: joint_0
   id: 0
-  min_angle: -135
-  max_angle:  135
+  min_angle: -200
+  max_angle:  60
 
 joint_1_driver:
   joint_name: joint_1
   id: 1
-  min_angle: -135
-  max_angle:  135
+  min_angle: -55
+  max_angle:  200

@@ -11,7 +11,7 @@ class b3m_servo_driver
 {
  public:
   b3m_servo_driver(ros::NodeHandle nh, std::string portName, int baudrate, int num, char** actuators_name)
-      : nh_(nh), rate_(20), port_(portName, baudrate)
+      : nh_(nh), rate_(20), port_(portName, baudrate), loop_(0)
   {
     for (int i = 0; i < num; i++) {
       boost::shared_ptr<KondoB3mServo> actuator(new KondoB3mServo(std::string(actuators_name[i])));
@@ -29,11 +29,13 @@ class b3m_servo_driver
   void joint_cb(const sensor_msgs::JointStateConstPtr& joint_state)
   {
     short target_time = 0;
-    //ROS_INFO("Angle : %d\n",angle);
+    ROS_INFO("loop : %d", loop_);
+    loop_++;
     for (int i = 0; i < actuator_vector_.size(); ++i) {
       short angle = (short)(joint_state->position[i] * 100 * 100);
+      ROS_INFO("id : %d, Angle : %d", i, angle);
       actuator_vector_[i]->b3mSetPosition(&port_, angle, target_time);
-      usleep(1000);
+      usleep(10000);
     }
   }
 
@@ -50,6 +52,7 @@ class b3m_servo_driver
   {
     for (int i = 0; i < actuator_vector_.size(); ++i) {
       actuator_vector_[i]->b3mFreePosModeSet(&port_);
+      usleep(5000);
     }
   }
 
@@ -59,6 +62,7 @@ class b3m_servo_driver
   ros::NodeHandle nh_;
   ros::Rate rate_;
   ros::Subscriber joint_angle_sub_;
+  int loop_;
 };
 
 

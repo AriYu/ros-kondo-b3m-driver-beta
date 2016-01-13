@@ -165,6 +165,14 @@ class KondoB3mServo{
   {
     unsigned char sendData[9];
     unsigned char receiveData[7];
+    if(angle > max_angle_*100)
+    {
+      angle = max_angle_*100;
+    }
+    if(angle < min_angle_*100)
+    {
+      angle = min_angle_*100;
+    }
     SetServoPosition(0x00, angle, target_time, sendData);
     write(port->fd_, sendData, sizeof(sendData));
 
