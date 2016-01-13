@@ -23,7 +23,12 @@ class b3m_servo_driver
       actuator_vector_[i]->b3mTrajectoryModeSet(&port_, TRAJECTORY_EVEN_MODE);
       actuator_vector_[i]->b3mGainParamSet(&port_, 0x00);
     }
+
+    angles_.resize(actuator_vector_.size());
+    multi_ctrl = new KondoB3mServoMultiCtrl(actuator_vector_);
+
     joint_angle_sub_ = nh_.subscribe<sensor_msgs::JointState>("/joint_states", 1, boost::bind(&b3m_servo_driver::joint_cb, this, _1));
+
   }
 
   void joint_cb(const sensor_msgs::JointStateConstPtr& joint_state)
@@ -31,12 +36,17 @@ class b3m_servo_driver
     short target_time = 0;
     ROS_INFO("loop : %d", loop_);
     loop_++;
-    for (int i = 0; i < actuator_vector_.size(); ++i) {
-      short angle = (short)(joint_state->position[i] * 100 * 100);
-      ROS_INFO("id : %d, Angle : %d", i, angle);
-      actuator_vector_[i]->b3mSetPosition(&port_, angle, target_time);
-      usleep(10000);
+    for(int i = 0; i < actuator_vector_.size(); ++i)
+    {
+      angles_[i] = (short)(joint_state->position[i] * 100 * 100);
     }
+    multi_ctrl->b3mSetPositionMulti(&port_, angles_, target_time);
+    // for (int i = 0; i < actuator_vector_.size(); ++i) {
+    //   short angle = (short)(joint_state->position[i] * 100 * 100);
+    //   ROS_INFO("id : %d, Angle : %d", i, angle);
+    //   actuator_vector_[i]->b3mSetPosition(&port_, angle, target_time);
+    //   usleep(10000);
+    // }
   }
 
   void run()
@@ -54,15 +64,18 @@ class b3m_servo_driver
       actuator_vector_[i]->b3mFreePosModeSet(&port_);
       usleep(5000);
     }
+    delete multi_ctrl;
   }
 
  private:
   std::vector<boost::shared_ptr<KondoB3mServo> > actuator_vector_;
+  KondoB3mServoMultiCtrl *multi_ctrl;
   SerialPort port_;
   ros::NodeHandle nh_;
   ros::Rate rate_;
   ros::Subscriber joint_angle_sub_;
   int loop_;
+  std::vector<short> angles_;
 };
 
 

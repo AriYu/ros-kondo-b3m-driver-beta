@@ -219,4 +219,57 @@ class KondoB3mServo{
   }
 };
 
+class KondoB3mServoMultiCtrl
+{
+ private:
+  std::vector<boost::shared_ptr<KondoB3mServo> > actuator_vector_;
+  int size_of_data_;
+  int num_of_servo_;
+ public:
+  KondoB3mServoMultiCtrl(std::vector<boost::shared_ptr<KondoB3mServo> > actuator_vector)
+  {
+    actuator_vector_ = actuator_vector;
+    num_of_servo_ = actuator_vector_.size();
+    size_of_data_ = actuator_vector_.size() * 3 + 3;
+  }
+  
+  void b3mSetPositionMulti(SerialPort *port, std::vector<short> angles, short target_time)
+  {
+    unsigned char *sendData = new unsigned char[size_of_data_];
+    SetServoPositionMulti(0x00, num_of_servo_, angles, target_time, sendData);
+    write(port->fd_, sendData, sizeof(sendData));
+
+    printf("sp)send : ");
+    for(int i = 0; i < sizeof(sendData); ++i)
+	{
+	  printf("%x  ", sendData[i]);
+	}
+    printf("\n");
+  }
+  
+  void SetServoPositionMulti(unsigned char option, int num, std::vector<short> angles, short target_time, unsigned char data[])
+  {
+    data[0]  = (unsigned char)size_of_data_; // SIZE
+    data[1]  = (unsigned char)0x06;  // コマンド(write)
+    data[2]  = (unsigned char)0x00; // OPTION
+    for (int i = 0; i < num_of_servo_; ++i) {
+      data[3 + 3*i] = (unsigned char)actuator_vector_[i]->id_;
+      data[4 + 3*i] = (unsigned char)(angles[i]&0x00FF); // POS_L
+      data[5 + 3*i] = (unsigned char)((angles[i]&0xFF00)>>8); // POS_H
+    }
+    data[3 + 3*num_of_servo_]  = (unsigned char)(target_time&0x00FF); // TIME_L
+    data[3 + 3*num_of_servo_ + 1]  = (unsigned char)((target_time&0xFF00)>>8); // TIME_H
+    data[size_of_data_ -1]  = checksum(data, size_of_data_-1);// チェックサム
+  }
+  
+  unsigned char checksum(unsigned char data[], int num)
+  {
+    short sum = 0;
+    for (int i = 0; i < num; ++i) {
+      sum += data[i];
+    }
+    return (unsigned char)(sum&0x00FF); // SIZE~TIMEまでの総和の下位1Byte
+  }
+};
+
 #endif
