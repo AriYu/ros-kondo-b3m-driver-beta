@@ -19,9 +19,13 @@ class b3m_servo_driver
 	}
     for (int i = 0; i < num; i++) {
       actuator_vector_[i]->b3mFreePosModeSet(&port_);
+      usleep(10000);
       actuator_vector_[i]->b3mNormalPosModeSet(&port_);
+      usleep(10000);
       actuator_vector_[i]->b3mTrajectoryModeSet(&port_, TRAJECTORY_EVEN_MODE);
+      usleep(10000);
       actuator_vector_[i]->b3mGainParamSet(&port_, 0x00);
+      usleep(10000);
     }
 
     angles_.resize(actuator_vector_.size());
