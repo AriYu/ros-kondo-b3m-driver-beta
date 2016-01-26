@@ -38,10 +38,11 @@ class b3m_servo_driver
   void joint_cb(const sensor_msgs::JointStateConstPtr& joint_state)
   {
     short target_time = 0;
-    double angle_deg = (joint_state->position[i]*180.0)/M_PI;
+    double angle_deg = 0;
     for(int i = 0; i < actuator_vector_.size(); ++i)
     {
-      angles_[i] = (short)(joint_state->position[i] * 100);
+      angle_deg = (joint_state->position[i]*180.0)/M_PI;
+      angles_[i] = (short)(angle_deg * 100);
     }
     multi_ctrl->b3mSetPositionMulti(&port_, angles_, target_time);
     usleep(10000);
