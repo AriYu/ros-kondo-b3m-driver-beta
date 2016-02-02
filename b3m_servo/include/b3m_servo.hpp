@@ -45,6 +45,11 @@ class KondoB3mServo{
 	}
   }
 
+  void b3mSetId(int new_id)
+  {
+    id_ = new_id;
+  }
+
   int b3mNormalPosModeSet(SerialPort *port)
   {
     return b3mTorquModeSet(port, NORMAL_MODE);
@@ -151,6 +156,28 @@ class KondoB3mServo{
     data[6]  = (unsigned char)(target_time&0x00FF); // TIME_L
     data[7]  = (unsigned char)((target_time&0xFF00)>>8); // TIME_H
     data[8]  = checksum(data, 8);// チェックサム
+  }
+
+  double b3mReadPosition(SerialPort *port)
+  {
+    unsigned char sendData[7];
+    unsigned char receiveData[7];
+    SetServoRead(sendData);
+    write(port->fd_, sendData, sizeof(sendData));
+    read(port->fd_, receiveData, sizeof(receiveData));
+    double angle = receiveData[4] + (receiveData[5]<<8);
+    return angle;
+  }
+
+  void SetServoRead(unsigned char data[])
+  {
+    data[0] = (unsigned char)0x07;
+    data[1] = (unsigned char)0x03;
+    data[2] = (unsigned char)0x00;
+    data[3] = (unsigned char)id_;
+    data[4] = (unsigned char)0x2C;
+    data[5] = (unsigned char)0x02;
+    data[6] = checksum(data, 6);
   }
 
  private:  

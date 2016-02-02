@@ -139,8 +139,10 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 add_executable(b3m_driver src/b3m_driver.cpp)
+add_executable(b3m_set_center src/b3m_set_center.cpp)
 
 target_link_libraries(b3m_driver ${catkin_LIBRARIES})
+target_link_libraries(b3m_set_center ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############
