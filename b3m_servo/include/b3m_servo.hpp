@@ -61,21 +61,8 @@ class KondoB3mServo{
     unsigned char receiveData[5];
 
     ChangeServoStatus(0x00, 1, mode, sendData);
-    // printf("tom)send : ");
-    // for(int i = 0; i < sizeof(sendData); ++i)
-	// {
-	//   printf("%x  ", sendData[i]);
-	// }
-    // printf("\n");
     write(port->fd_, sendData, sizeof(sendData));
     read(port->fd_, receiveData, sizeof(receiveData));
-    // printf("tom)received : ");
-    // for(int i = 0; i < sizeof(receiveData); ++i)
-	// {
-	//   printf("%x  ", receiveData[i]);
-	// }
-    // printf("\n");
-    // printf("-------------------------------\n");
     return 0;
   }
 
@@ -96,21 +83,8 @@ class KondoB3mServo{
     unsigned char sendData[8];
     unsigned char receiveData[5];
     ChangeTrajectoryMode(0x00, 1, mode, sendData);
-    // printf("trm)send : ");
-    // for(int i = 0; i < sizeof(sendData); ++i)
-	// {
-	//   printf("%x  ", sendData[i]);
-	// }
-    // printf("\n");
     write(port->fd_, sendData, sizeof(sendData));
     read(port->fd_, receiveData, sizeof(receiveData));
-    // printf("trm)received : ");
-    // for(int i = 0; i < sizeof(receiveData); ++i)
-	// {
-	//   printf("%x  ", receiveData[i]);
-	// }
-    // printf("\n");
-    // printf("-------------------------------\n");
     return 0;
   }
 
@@ -132,20 +106,7 @@ class KondoB3mServo{
     unsigned char receiveData[5];
     ChangeServoGain(0x00, 1, mode, sendData);
     write(port->fd_, sendData, sizeof(sendData));
-    // printf("gp)send : ");
-    // for(int i = 0; i < sizeof(sendData); ++i)
-	// {
-	//   printf("%x  ", sendData[i]);
-	// }
-    // printf("\n");
     read(port->fd_, receiveData, sizeof(receiveData));
-    // printf("gp)received : ");
-    // for(int i = 0; i < sizeof(receiveData); ++i)
-	// {
-	//   printf("%x  ", receiveData[i]);
-	// }
-    // printf("\n");
-    // printf("-------------------------------\n");
     return 0;
   }
 
@@ -175,23 +136,7 @@ class KondoB3mServo{
     }
     SetServoPosition(0x00, angle, target_time, sendData);
     write(port->fd_, sendData, sizeof(sendData));
-
-    // printf("sp)send : ");
-    // for(int i = 0; i < sizeof(sendData); ++i)
-	// {
-	//   printf("%x  ", sendData[i]);
-	// }
-    // printf("\n");
-
     read(port->fd_, receiveData, sizeof(receiveData));
-
-    // printf("sp)received : ");
-    // for(int i = 0; i < sizeof(receiveData); ++i)
-	// {
-	//   printf("%x  ", receiveData[i]);
-	// }
-    // printf("\n");
-    // printf("-------------------------------\n");
     return 0;
   }
 
@@ -238,14 +183,6 @@ class KondoB3mServoMultiCtrl
     unsigned char *sendData = new unsigned char[size_of_data_];
     SetServoPositionMulti(0x00, num_of_servo_, angles, target_time, sendData);
     write(port->fd_, sendData, size_of_data_);
-
-    // ROS_INFO("size_of_data : %d", size_of_data_);
-    // printf("spM)send : ");
-    // for(int i = 0; i < size_of_data_; ++i)
-	// {
-	//   printf("%x  ", sendData[i]);
-	// }
-    // printf("\n");
   }
   
   void SetServoPositionMulti(unsigned char option, int num, std::vector<short> angles, short target_time, unsigned char data[])
