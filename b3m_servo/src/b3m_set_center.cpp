@@ -15,8 +15,8 @@ class b3m_set_center
       : port_(portName, baudrate), servo_("servo")
   {
     servo_.b3mSetId(id);
-    double angle = servo_.b3mReadPosition(&port_);
-    ROS_INFO("Angle : %lf", angle);
+    int angle = servo_.b3mReadPosition(&port_);
+    std::cout << "Angle :" << angle << std::endl;
   }
 
   ~b3m_set_center()
@@ -31,7 +31,9 @@ class b3m_set_center
 
 int main(int argc, char **argv)
 {
-  
+  ros::init(argc, argv, "b3m_set_center");
+  ros::NodeHandle nh;
+
   b3m_set_center b3m_setter("/dev/ttyUSB0", B115200, atoi(argv[1]));
 
   return 0;

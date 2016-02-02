@@ -15,6 +15,8 @@
 #define TRAJECTORY_FORTHPOLY_MODE 4
 #define TRAJECTORY_FIFTHPOLY_MODE 5
 
+int hexa2dec(unsigned char data1, unsigned char data2);
+
 class KondoB3mServo{
  public:
   int min_angle_;
@@ -158,14 +160,32 @@ class KondoB3mServo{
     data[8]  = checksum(data, 8);// チェックサム
   }
 
-  double b3mReadPosition(SerialPort *port)
+  int b3mReadPosition(SerialPort *port)
   {
-    unsigned char sendData[7];
-    unsigned char receiveData[7];
+    unsigned char sendData[7] = {};
+    unsigned char receiveData[7] = {};
+    int check = 0;
     SetServoRead(sendData);
-    write(port->fd_, sendData, sizeof(sendData));
-    read(port->fd_, receiveData, sizeof(receiveData));
-    double angle = receiveData[4] + (receiveData[5]<<8);
+    
+    while(1){
+      // 受信バッファのフラッシュ
+      tcflush(port->fd_, TCIFLUSH);
+      // 送信バッファのフラッシュ
+      tcflush(port->fd_, TCOFLUSH);
+      write(port->fd_, sendData, sizeof(sendData));
+      read(port->fd_, receiveData, sizeof(receiveData));
+      // for (size_t i = 0; i < sizeof(receiveData); ++i) {
+      //   ROS_INFO("Data%d : %x", (int)i, receiveData[i]);
+      // }
+      int check = checksum(receiveData, 6);
+      if(check == receiveData[6])
+      {
+        break;
+      }
+      usleep(5000);
+    }
+    // Data[4]が下位2bit, Data[5]が上位2bit
+    int angle = hexa2dec(receiveData[4], receiveData[5]);
     return angle;
   }
 
@@ -244,5 +264,32 @@ class KondoB3mServoMultiCtrl
     return (unsigned char)(sum&0x00FF); // SIZE~TIMEまでの総和の下位1Byte
   }
 };
+
+int hexa2dec(unsigned char data1, unsigned char data2)
+{
+  int return_val = 0;
+  // 負の数(2二進数で最上位ビットが1)
+  if(data2 > 127)
+  {
+    unsigned char minus_data1;
+    unsigned char minus_data2;
+    minus_data1 = ~data1; // ビット反転
+    minus_data2 = ~data2; // ビット反転
+    // +1する
+    if(minus_data1 < 255){
+      minus_data1 = minus_data1 + 1;
+    }else{
+      minus_data2 = minus_data2 + 1;
+    }
+    return_val = (minus_data1 % 16)*1 + (minus_data1 / 16)*16 
+        + (minus_data2 % 16)*pow(16, 2) + (minus_data2 / 16)*pow(16, 3);
+    return_val = -return_val;
+  }else
+  {
+    return_val = (data1 % 16)*1 + (data1 / 16)*16 
+        + (data2 % 16)*pow(16, 2) + (data2 / 16)*pow(16, 3);
+  }
+  return return_val;
+}
 
 #endif
