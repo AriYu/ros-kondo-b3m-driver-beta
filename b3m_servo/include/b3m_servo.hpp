@@ -2,6 +2,7 @@
 #define B3M_SERVO_H_
 
 #include <ros/ros.h>
+#include <boost/thread.hpp>
 #include <string>
 #include "serial.hpp"
 
@@ -24,7 +25,8 @@ class KondoB3mServo{
   int max_angle_;
   unsigned char id_;
   std::string joint_name_;
-
+  boost::mutex access_mutex_;
+  
   KondoB3mServo(std::string actuator_name)
   {
     ros::NodeHandle nh(std::string("~")+actuator_name);
@@ -68,8 +70,8 @@ class KondoB3mServo{
     unsigned char receiveData[5];
 
     generateChangeServoStatusCmd(0x00, 1, mode, sendData);
-    write(port->fd_, sendData, sizeof(sendData));
-    read(port->fd_, receiveData, sizeof(receiveData));
+    safeWrite(port->fd_, sendData, sizeof(sendData));
+    safeRead(port->fd_, receiveData, sizeof(receiveData));
     return 0;
   }
 
@@ -90,8 +92,8 @@ class KondoB3mServo{
     unsigned char sendData[8];
     unsigned char receiveData[5];
     generateChangeTrajectoryModeCmd(0x00, 1, mode, sendData);
-    write(port->fd_, sendData, sizeof(sendData));
-    read(port->fd_, receiveData, sizeof(receiveData));
+    safeWrite(port->fd_, sendData, sizeof(sendData));
+    safeRead(port->fd_, receiveData, sizeof(receiveData));
     return 0;
   }
 
@@ -112,8 +114,8 @@ class KondoB3mServo{
     unsigned char sendData[8];
     unsigned char receiveData[5];
     generateChangeServoGainCmd(0x00, 1, mode, sendData);
-    write(port->fd_, sendData, sizeof(sendData));
-    read(port->fd_, receiveData, sizeof(receiveData));
+    safeWrite(port->fd_, sendData, sizeof(sendData));
+    safeRead(port->fd_, receiveData, sizeof(receiveData));
     return 0;
   }
 
@@ -142,8 +144,8 @@ class KondoB3mServo{
       angle = min_angle_*100;
     }
     generateSetServoPositionCmd(0x00, angle, target_time, sendData);
-    write(port->fd_, sendData, sizeof(sendData));
-    read(port->fd_, receiveData, sizeof(receiveData));
+    safeWrite(port->fd_, sendData, sizeof(sendData));
+    safeRead(port->fd_, receiveData, sizeof(receiveData));
     return 0;
   }
 
@@ -170,8 +172,8 @@ class KondoB3mServo{
     while(1){
       tcflush(port->fd_, TCIFLUSH);      // 受信バッファのフラッシュ
       tcflush(port->fd_, TCOFLUSH);      // 送信バッファのフラッシュ
-      write(port->fd_, sendData, sizeof(sendData));
-      read(port->fd_, receiveData, sizeof(receiveData));
+      safeWrite(port->fd_, sendData, sizeof(sendData));
+      safeRead(port->fd_, receiveData, sizeof(receiveData));
       int check = checksum(receiveData, 6);
       if(check == receiveData[6])
       {
@@ -195,6 +197,21 @@ class KondoB3mServo{
     data[6] = checksum(data, 6);
   }
 
+  ssize_t safeWrite(int fd, const void *buf, size_t count)
+  {
+    {
+      boost::mutex::scoped_lock(access_mutex_);
+      return write(fd, buf, count);
+    }
+  }
+  
+  ssize_t safeRead(int fd, void *buf, size_t count)
+  {
+    {
+      boost::mutex::scoped_lock(access_mutex_);
+      return read(fd, buf, count);
+    }
+  }
 };
 
 class KondoB3mServoMultiCtrl
@@ -203,6 +220,7 @@ class KondoB3mServoMultiCtrl
   std::vector<boost::shared_ptr<KondoB3mServo> > actuator_vector_;
   int size_of_data_;
   int num_of_servo_;
+
  public:
   KondoB3mServoMultiCtrl(std::vector<boost::shared_ptr<KondoB3mServo> > actuator_vector)
   {
