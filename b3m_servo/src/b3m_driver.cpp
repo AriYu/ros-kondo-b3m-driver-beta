@@ -7,10 +7,10 @@
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 
-class b3m_servo_driver
+class B3mServoDriver
 {
  public:
-  b3m_servo_driver(ros::NodeHandle nh, std::string portName, int baudrate, int num, char** actuators_name)
+  B3mServoDriver(ros::NodeHandle nh, std::string portName, int baudrate, int num, char** actuators_name)
       : nh_(nh), rate_(20), port_(portName, baudrate), loop_(0)
   {
     for (int i = 0; i < num; i++) {
@@ -38,11 +38,11 @@ class b3m_servo_driver
     multi_ctrl_ = new KondoB3mServoMultiCtrl(actuator_vector_);
 
     ros::NodeHandle n("~");
-    joint_angle_sub_ = nh_.subscribe<sensor_msgs::JointState>(n.param<std::string>("joint_cmd_topic_name", "/joint_cmd"), 1, boost::bind(&b3m_servo_driver::joint_cb, this, _1));
+    joint_angle_sub_ = nh_.subscribe<sensor_msgs::JointState>(n.param<std::string>("joint_cmd_topic_name", "/joint_cmd"), 1, boost::bind(&B3mServoDriver::jointPositionCallback, this, _1));
     joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>(n.param<std::string>("joint_state_topic_name", "/joint_states"), 10);
   }
 
-  void joint_cb(const sensor_msgs::JointStateConstPtr& joint_state)
+  void jointPositionCallback(const sensor_msgs::JointStateConstPtr& joint_state)
   {
     short target_time = 0;
     double angle_deg = 0;
@@ -64,7 +64,7 @@ class b3m_servo_driver
     }
   }
 
-  ~b3m_servo_driver()
+  ~B3mServoDriver()
   {
     for (int i = 0; i < actuator_vector_.size(); ++i) {
       actuator_vector_[i]->b3mFreePosModeSet(&port_);
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "b3m_driver");
   ros::NodeHandle nh;
   
-  b3m_servo_driver  driver(nh, "/dev/ttyUSB0", B115200, argc-1, &argv[1]);
+  B3mServoDriver driver(nh, "/dev/ttyUSB0", B115200, argc-1, &argv[1]);
   driver.run();
 
   return 0;
