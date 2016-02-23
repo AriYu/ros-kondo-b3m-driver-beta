@@ -16,7 +16,13 @@ class b3m_servo_driver
     for (int i = 0; i < num; i++) {
       boost::shared_ptr<KondoB3mServo> actuator(new KondoB3mServo(std::string(actuators_name[i])));
       actuator_vector_.push_back(actuator);
-	}
+      joint_states_.name.push_back(std::string(actuators_name[i]));
+    }
+    
+    joint_states_.position.resize(num);
+    joint_states_.velocity.resize(num);
+    joint_states_.effort.resize(num);
+   
     for (int i = 0; i < num; i++) {
       actuator_vector_[i]->b3mFreePosModeSet(&port_);
       usleep(10000);
@@ -27,12 +33,13 @@ class b3m_servo_driver
       actuator_vector_[i]->b3mGainParamSet(&port_, 0x00);
       usleep(10000);
     }
-
+    
     angles_.resize(actuator_vector_.size());
     multi_ctrl_ = new KondoB3mServoMultiCtrl(actuator_vector_);
 
-    joint_angle_sub_ = nh_.subscribe<sensor_msgs::JointState>("/joint_states", 1, boost::bind(&b3m_servo_driver::joint_cb, this, _1));
-
+    ros::NodeHandle n("~");
+    joint_angle_sub_ = nh_.subscribe<sensor_msgs::JointState>(n.param<std::string>("joint_cmd_topic_name", "/joint_cmd"), 1, boost::bind(&b3m_servo_driver::joint_cb, this, _1));
+    joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>(n.param<std::string>("joint_state_topic_name", "/joint_states"), 10);
   }
 
   void joint_cb(const sensor_msgs::JointStateConstPtr& joint_state)
@@ -46,12 +53,6 @@ class b3m_servo_driver
     }
     multi_ctrl_->b3mSetPositionMulti(&port_, angles_, target_time);
     usleep(10000);
-    // for (int i = 0; i < actuator_vector_.size(); ++i) {
-    //   short angle = (short)(joint_state->position[i] * 100 * 100);
-    //   ROS_INFO("id : %d, Angle : %d", i, angle);
-    //   actuator_vector_[i]->b3mSetPosition(&port_, angle, target_time);
-    //   usleep(10000);
-    // }
   }
 
   void run()
@@ -82,7 +83,8 @@ class b3m_servo_driver
   int loop_;
   std::vector<short> angles_;
 
-  
+  ros::Publisher joint_state_pub_;
+  sensor_msgs::JointState joint_states_;
 };
 
 
@@ -93,7 +95,6 @@ int main(int argc, char **argv)
   
   b3m_servo_driver  driver(nh, "/dev/ttyUSB0", B115200, argc-1, &argv[1]);
   driver.run();
-
 
   return 0;
 }
