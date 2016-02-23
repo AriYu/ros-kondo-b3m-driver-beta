@@ -38,17 +38,17 @@ class B3mServoDriver
     multi_ctrl_ = new KondoB3mServoMultiCtrl(actuator_vector_);
 
     ros::NodeHandle n("~");
-    joint_angle_sub_ = nh_.subscribe<sensor_msgs::JointState>(n.param<std::string>("joint_cmd_topic_name", "/joint_cmd"), 1, boost::bind(&B3mServoDriver::jointPositionCallback, this, _1));
+    joint_cmd_sub_ = nh_.subscribe<sensor_msgs::JointState>(n.param<std::string>("joint_cmd_topic_name", "/joint_pos_cmd"), 1, boost::bind(&B3mServoDriver::jointPositionCallback, this, _1));
     joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>(n.param<std::string>("joint_state_topic_name", "/joint_states"), 10);
   }
 
-  void jointPositionCallback(const sensor_msgs::JointStateConstPtr& joint_state)
+  void jointPositionCallback(const sensor_msgs::JointStateConstPtr& joint_pos_cmd)
   {
     short target_time = 0;
     double angle_deg = 0;
     for(int i = 0; i < actuator_vector_.size(); ++i)
     {
-      angle_deg = (joint_state->position[i]*180.0)/M_PI;
+      angle_deg = (joint_pos_cmd->position[i]*180.0)/M_PI;
       angles_[i] = (short)(angle_deg * 100);
     }
     multi_ctrl_->setPositionMulti(&port_, angles_, target_time);
@@ -58,10 +58,19 @@ class B3mServoDriver
   void run()
   {
     while(nh_.ok())
-	{
-	  ros::spinOnce();
-	  rate_.sleep();
-    }
+      {
+	multi_ctrl_->readPositionMulti(&port_);
+	for (size_t i = 0; i < actuator_vector_.size(); ++i) {
+	  joint_states_.velocity[i] = 0;
+	  joint_states_.effort[i] = 0;
+	  joint_states_.position[i] = actuator_vector_[i]->getAngle();
+	}
+	joint_states_.header.stamp = ros::Time::now();
+	joint_state_pub_.publish(joint_states_);
+	
+	ros::spinOnce();
+	rate_.sleep();
+      }
   }
 
   ~B3mServoDriver()
@@ -79,7 +88,7 @@ class B3mServoDriver
   SerialPort port_;
   ros::NodeHandle nh_;
   ros::Rate rate_;
-  ros::Subscriber joint_angle_sub_;
+  ros::Subscriber joint_cmd_sub_;
   int loop_;
   std::vector<short> angles_;
 

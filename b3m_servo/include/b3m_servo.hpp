@@ -23,9 +23,9 @@ class KondoB3mServo{
  public:
   int min_angle_;
   int max_angle_;
+  double angle_;
   unsigned char id_;
   std::string joint_name_;
-  boost::mutex access_mutex_;
   
   KondoB3mServo(std::string actuator_name)
   {
@@ -70,8 +70,8 @@ class KondoB3mServo{
     unsigned char receiveData[5];
 
     generateChangeServoStatusCmd(0x00, 1, mode, sendData);
-    safeWrite(port->fd_, sendData, sizeof(sendData));
-    safeRead(port->fd_, receiveData, sizeof(receiveData));
+    write(port->fd_, sendData, sizeof(sendData));
+    read(port->fd_, receiveData, sizeof(receiveData));
     return 0;
   }
 
@@ -92,8 +92,8 @@ class KondoB3mServo{
     unsigned char sendData[8];
     unsigned char receiveData[5];
     generateChangeTrajectoryModeCmd(0x00, 1, mode, sendData);
-    safeWrite(port->fd_, sendData, sizeof(sendData));
-    safeRead(port->fd_, receiveData, sizeof(receiveData));
+    write(port->fd_, sendData, sizeof(sendData));
+    read(port->fd_, receiveData, sizeof(receiveData));
     return 0;
   }
 
@@ -114,8 +114,8 @@ class KondoB3mServo{
     unsigned char sendData[8];
     unsigned char receiveData[5];
     generateChangeServoGainCmd(0x00, 1, mode, sendData);
-    safeWrite(port->fd_, sendData, sizeof(sendData));
-    safeRead(port->fd_, receiveData, sizeof(receiveData));
+    write(port->fd_, sendData, sizeof(sendData));
+    read(port->fd_, receiveData, sizeof(receiveData));
     return 0;
   }
 
@@ -144,8 +144,8 @@ class KondoB3mServo{
       angle = min_angle_*100;
     }
     generateSetServoPositionCmd(0x00, angle, target_time, sendData);
-    safeWrite(port->fd_, sendData, sizeof(sendData));
-    safeRead(port->fd_, receiveData, sizeof(receiveData));
+    write(port->fd_, sendData, sizeof(sendData));
+    read(port->fd_, receiveData, sizeof(receiveData));
     return 0;
   }
 
@@ -172,8 +172,8 @@ class KondoB3mServo{
     while(1){
       tcflush(port->fd_, TCIFLUSH);      // 受信バッファのフラッシュ
       tcflush(port->fd_, TCOFLUSH);      // 送信バッファのフラッシュ
-      safeWrite(port->fd_, sendData, sizeof(sendData));
-      safeRead(port->fd_, receiveData, sizeof(receiveData));
+      write(port->fd_, sendData, sizeof(sendData));
+      read(port->fd_, receiveData, sizeof(receiveData));
       int check = checksum(receiveData, 6);
       if(check == receiveData[6])
       {
@@ -183,6 +183,7 @@ class KondoB3mServo{
     }
     // Data[4]が下位2bit, Data[5]が上位2bit
     int angle = hexa2dec(receiveData[4], receiveData[5]);
+    angle_ = (double)angle/100.0;
     return angle;
   }
 
@@ -197,21 +198,11 @@ class KondoB3mServo{
     data[6] = checksum(data, 6);
   }
 
-  ssize_t safeWrite(int fd, const void *buf, size_t count)
+  double getAngle()
   {
-    {
-      boost::mutex::scoped_lock(access_mutex_);
-      return write(fd, buf, count);
-    }
+    return angle_;
   }
   
-  ssize_t safeRead(int fd, void *buf, size_t count)
-  {
-    {
-      boost::mutex::scoped_lock(access_mutex_);
-      return read(fd, buf, count);
-    }
-  }
 };
 
 class KondoB3mServoMultiCtrl
@@ -220,7 +211,8 @@ class KondoB3mServoMultiCtrl
   std::vector<boost::shared_ptr<KondoB3mServo> > actuator_vector_;
   int size_of_data_;
   int num_of_servo_;
-
+  boost::mutex access_mutex_;
+  
  public:
   KondoB3mServoMultiCtrl(std::vector<boost::shared_ptr<KondoB3mServo> > actuator_vector)
   {
@@ -233,7 +225,11 @@ class KondoB3mServoMultiCtrl
   {
     unsigned char *sendData = new unsigned char[size_of_data_];
     setServoPositionMulti(0x00, num_of_servo_, angles, target_time, sendData);
-    write(port->fd_, sendData, size_of_data_);
+    {
+      boost::mutex::scoped_lock(access_mutex_);
+      write(port->fd_, sendData, size_of_data_);
+    }
+
   }
   
   void setServoPositionMulti(unsigned char option, int num, std::vector<short> angles, short target_time, unsigned char data[])
@@ -258,7 +254,16 @@ class KondoB3mServoMultiCtrl
     data[3 + 3*num_of_servo_ + 1]  = (unsigned char)((target_time&0xFF00)>>8); // TIME_H
     data[size_of_data_ -1]  = checksum(data, size_of_data_-1);// チェックサム
   }
-  
+
+  void readPositionMulti(SerialPort *port)
+  {
+    {
+      boost::mutex::scoped_lock(access_mutex_);
+      for (size_t i = 0; i < actuator_vector_.size(); ++i) {
+	actuator_vector_[i]->readPosition(port);
+      }
+    }
+  }
 
 };
 
