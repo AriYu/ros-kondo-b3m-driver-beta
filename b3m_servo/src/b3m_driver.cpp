@@ -24,13 +24,13 @@ class B3mServoDriver
     joint_states_.effort.resize(num);
    
     for (int i = 0; i < num; i++) {
-      actuator_vector_[i]->b3mFreePosModeSet(&port_);
+      actuator_vector_[i]->setFreePosMode(&port_);
       usleep(10000);
-      actuator_vector_[i]->b3mNormalPosModeSet(&port_);
+      actuator_vector_[i]->setNormalPosMode(&port_);
       usleep(10000);
-      actuator_vector_[i]->b3mTrajectoryModeSet(&port_, TRAJECTORY_EVEN_MODE);
+      actuator_vector_[i]->setTrajectoryMode(&port_, TRAJECTORY_EVEN_MODE);
       usleep(10000);
-      actuator_vector_[i]->b3mGainParamSet(&port_, 0x00);
+      actuator_vector_[i]->setGainParam(&port_, 0x00);
       usleep(10000);
     }
     
@@ -51,7 +51,7 @@ class B3mServoDriver
       angle_deg = (joint_state->position[i]*180.0)/M_PI;
       angles_[i] = (short)(angle_deg * 100);
     }
-    multi_ctrl_->b3mSetPositionMulti(&port_, angles_, target_time);
+    multi_ctrl_->setPositionMulti(&port_, angles_, target_time);
     usleep(10000);
   }
   
@@ -67,7 +67,7 @@ class B3mServoDriver
   ~B3mServoDriver()
   {
     for (int i = 0; i < actuator_vector_.size(); ++i) {
-      actuator_vector_[i]->b3mFreePosModeSet(&port_);
+      actuator_vector_[i]->setFreePosMode(&port_);
       usleep(5000);
     }
     delete multi_ctrl_;
