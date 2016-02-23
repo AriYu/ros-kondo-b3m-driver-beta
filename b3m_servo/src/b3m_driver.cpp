@@ -54,7 +54,7 @@ class B3mServoDriver
     multi_ctrl_->b3mSetPositionMulti(&port_, angles_, target_time);
     usleep(10000);
   }
-
+  
   void run()
   {
     while(nh_.ok())

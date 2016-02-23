@@ -15,6 +15,7 @@
 #define TRAJECTORY_FORTHPOLY_MODE 4
 #define TRAJECTORY_FIFTHPOLY_MODE 5
 
+unsigned char checksum(unsigned char data[], int num);
 int hexa2dec(unsigned char data1, unsigned char data2);
 
 class KondoB3mServo{
@@ -28,23 +29,22 @@ class KondoB3mServo{
   {
     ros::NodeHandle nh(std::string("~")+actuator_name);
     int id_int=0;
-    if(nh.getParam("id", id_int))
-    {
+    if(nh.getParam("id", id_int)){
       id_ = (unsigned char)id_int;
       ROS_INFO("id: %d", id_);
     }
 
-	if (nh.getParam("joint_name", joint_name_)) {
+    if (nh.getParam("joint_name", joint_name_)) {
       ROS_INFO("joint_name: %s", joint_name_.c_str());	    
-	}
+    }
 
-	if (nh.getParam("min_angle", min_angle_)) {
+    if (nh.getParam("min_angle", min_angle_)) {
       ROS_INFO("min_angle: %d", min_angle_);
-	}
+    }
 
-	if (nh.getParam("max_angle", max_angle_)) {
+    if (nh.getParam("max_angle", max_angle_)) {
       ROS_INFO("max_angle: %d", max_angle_);
-	}
+    }
   }
 
   void b3mSetId(int new_id)
@@ -174,9 +174,6 @@ class KondoB3mServo{
       tcflush(port->fd_, TCOFLUSH);
       write(port->fd_, sendData, sizeof(sendData));
       read(port->fd_, receiveData, sizeof(receiveData));
-      // for (size_t i = 0; i < sizeof(receiveData); ++i) {
-      //   ROS_INFO("Data%d : %x", (int)i, receiveData[i]);
-      // }
       int check = checksum(receiveData, 6);
       if(check == receiveData[6])
       {
@@ -200,15 +197,6 @@ class KondoB3mServo{
     data[6] = checksum(data, 6);
   }
 
- private:  
-  unsigned char checksum(unsigned char data[], int num)
-  {
-    short sum = 0;
-    for (int i = 0; i < num; ++i) {
-      sum += data[i];
-    }
-    return (unsigned char)(sum&0x00FF); // SIZE~TIMEまでの総和の下位1Byte
-  }
 };
 
 class KondoB3mServoMultiCtrl
@@ -255,15 +243,17 @@ class KondoB3mServoMultiCtrl
     data[size_of_data_ -1]  = checksum(data, size_of_data_-1);// チェックサム
   }
   
-  unsigned char checksum(unsigned char data[], int num)
-  {
-    short sum = 0;
-    for (int i = 0; i < num; ++i) {
-      sum += data[i];
-    }
-    return (unsigned char)(sum&0x00FF); // SIZE~TIMEまでの総和の下位1Byte
-  }
+
 };
+
+unsigned char checksum(unsigned char data[], int num)
+{
+  short sum = 0;
+  for (int i = 0; i < num; ++i) {
+    sum += data[i];
+  }
+  return (unsigned char)(sum&0x00FF); // SIZE~TIMEまでの総和の下位1Byte
+}
 
 int hexa2dec(unsigned char data1, unsigned char data2)
 {
