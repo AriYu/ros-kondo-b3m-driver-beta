@@ -2,8 +2,8 @@
   <rosparam file="$(find b3m_servo)/config/b3m_driver_sample.yaml" command="load" ns="b3m_driver"/>
 
   <node name="b3m_driver" pkg="b3m_servo" type="b3m_driver" args="joint_0_driver joint_1_driver joint_2_driver joint_3_driver" output="screen" >
-    <rosparam name="joint_cmd_topic_name" value="/joint_cmd" />
-    <rosparam name="joint_state_topic_name" value="/joint_states" />
+    <param name="joint_cmd_topic_name" value="/joint_cmd" />
+    <param name="joint_state_topic_name" value="/joint_states" />
   </node>
 
 </launch>
