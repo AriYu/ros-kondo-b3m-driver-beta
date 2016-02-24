@@ -18,9 +18,10 @@ public:
   {
     fd_ = open(portName.c_str(), O_RDWR | O_NOCTTY);
     if(fd_ < 0)
-    {
-exit(-1);
-    }
+      {
+	ROS_ERROR("Fail to open : %s", portName.c_str());
+	exit(-1);
+      }
     // 現在のシリアルポートの設定を退避させる
     tcgetattr(fd_, &oldtio_);
     // 新しいポートの設定の構造体をクリア
@@ -28,11 +29,11 @@ exit(-1);
     
     // シリアル通信の設定
     newtio_.c_cc[VMIN] = 1;
-	newtio_.c_cc[VTIME] = 0;
-	newtio_.c_cflag = baudRate | CS8 | CREAD | CLOCAL;
-	newtio_.c_iflag = IGNBRK | IGNPAR;
-	newtio_.c_oflag = 0; // rawモード
-	newtio_.c_lflag = 0; // 非カノニカル入力
+    newtio_.c_cc[VTIME] = 0;
+    newtio_.c_cflag = baudRate | CS8 | CREAD | CLOCAL;
+    newtio_.c_iflag = IGNBRK | IGNPAR;
+    newtio_.c_oflag = 0; // rawモード
+    newtio_.c_lflag = 0; // 非カノニカル入力
 
     // ポートのクリア
     tcflush(fd_, TCIOFLUSH);

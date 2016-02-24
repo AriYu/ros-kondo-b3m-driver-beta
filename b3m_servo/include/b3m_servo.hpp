@@ -2,6 +2,7 @@
 #define B3M_SERVO_H_
 
 #include <ros/ros.h>
+#include <boost/thread.hpp>
 #include <string>
 #include "serial.hpp"
 
@@ -15,65 +16,66 @@
 #define TRAJECTORY_FORTHPOLY_MODE 4
 #define TRAJECTORY_FIFTHPOLY_MODE 5
 
+unsigned char checksum(unsigned char data[], int num);
 int hexa2dec(unsigned char data1, unsigned char data2);
 
 class KondoB3mServo{
  public:
   int min_angle_;
   int max_angle_;
+  double angle_;
   unsigned char id_;
   std::string joint_name_;
-
+  
   KondoB3mServo(std::string actuator_name)
   {
     ros::NodeHandle nh(std::string("~")+actuator_name);
     int id_int=0;
-    if(nh.getParam("id", id_int))
-    {
+    if(nh.getParam("id", id_int)){
       id_ = (unsigned char)id_int;
       ROS_INFO("id: %d", id_);
     }
 
-	if (nh.getParam("joint_name", joint_name_)) {
+    if (nh.getParam("joint_name", joint_name_)) {
       ROS_INFO("joint_name: %s", joint_name_.c_str());	    
-	}
+    }
 
-	if (nh.getParam("min_angle", min_angle_)) {
+    if (nh.getParam("min_angle", min_angle_)) {
       ROS_INFO("min_angle: %d", min_angle_);
-	}
+    }
 
-	if (nh.getParam("max_angle", max_angle_)) {
+    if (nh.getParam("max_angle", max_angle_)) {
       ROS_INFO("max_angle: %d", max_angle_);
-	}
+    }
   }
 
-  void b3mSetId(int new_id)
+  void setId(int new_id)
   {
     id_ = new_id;
   }
 
-  int b3mNormalPosModeSet(SerialPort *port)
+  int setNormalPosMode(SerialPort *port)
   {
-    return b3mTorquModeSet(port, NORMAL_MODE);
+    return setTorquMode(port, NORMAL_MODE);
   }
   
-  int b3mFreePosModeSet(SerialPort *port)
+  int setFreePosMode(SerialPort *port)
   {
-    return b3mTorquModeSet(port, FREE_MODE);
+    return setTorquMode(port, FREE_MODE);
   }
 
-  int b3mTorquModeSet(SerialPort *port, unsigned char mode)
+  int setTorquMode(SerialPort *port, unsigned char mode)
   {
     unsigned char sendData[8];
     unsigned char receiveData[5];
 
-    ChangeServoStatus(0x00, 1, mode, sendData);
+    generateChangeServoStatusCmd(0x00, 1, mode, sendData);
     write(port->fd_, sendData, sizeof(sendData));
     read(port->fd_, receiveData, sizeof(receiveData));
     return 0;
   }
 
-  void ChangeServoStatus(unsigned char option, unsigned char count, unsigned char mode, unsigned char data[])
+  void generateChangeServoStatusCmd(unsigned char option, unsigned char count, unsigned char mode, unsigned char data[])
   {
     data[0]  = (unsigned char)8; // SIZE
     data[1]  = (unsigned char)0x04;  // コマンド(write)
@@ -85,17 +87,17 @@ class KondoB3mServo{
     data[7]  = checksum(data, 7);// チェックサム
   }
 
-  int b3mTrajectoryModeSet(SerialPort *port, unsigned char mode)
+  int setTrajectoryMode(SerialPort *port, unsigned char mode)
   {
     unsigned char sendData[8];
     unsigned char receiveData[5];
-    ChangeTrajectoryMode(0x00, 1, mode, sendData);
+    generateChangeTrajectoryModeCmd(0x00, 1, mode, sendData);
     write(port->fd_, sendData, sizeof(sendData));
     read(port->fd_, receiveData, sizeof(receiveData));
     return 0;
   }
 
-  void  ChangeTrajectoryMode(unsigned char option, unsigned char count, unsigned char mode, unsigned char data[])
+  void generateChangeTrajectoryModeCmd(unsigned char option, unsigned char count, unsigned char mode, unsigned char data[])
   {
     data[0]  = (unsigned char)8; // SIZE
     data[1]  = (unsigned char)0x04;  // コマンド(write)
@@ -107,17 +109,17 @@ class KondoB3mServo{
     data[7]  = checksum(data, 7);// チェックサム
   }
 
-  int b3mGainParamSet(SerialPort *port, unsigned char mode)
+  int setGainParam(SerialPort *port, unsigned char mode)
   {
     unsigned char sendData[8];
     unsigned char receiveData[5];
-    ChangeServoGain(0x00, 1, mode, sendData);
+    generateChangeServoGainCmd(0x00, 1, mode, sendData);
     write(port->fd_, sendData, sizeof(sendData));
     read(port->fd_, receiveData, sizeof(receiveData));
     return 0;
   }
 
-  void ChangeServoGain( unsigned char option, unsigned char count, unsigned char mode, unsigned char data[])
+  void generateChangeServoGainCmd( unsigned char option, unsigned char count, unsigned char mode, unsigned char data[])
   {
     data[0]  = (unsigned char)8; // SIZE
     data[1]  = (unsigned char)0x04;  // コマンド(write)
@@ -129,7 +131,7 @@ class KondoB3mServo{
     data[7]  = checksum(data, 7);// チェックサム
   }
   
-  int b3mSetPosition(SerialPort *port, short angle, short target_time)
+  int setPosition(SerialPort *port, short angle, short target_time)
   {
     unsigned char sendData[9];
     unsigned char receiveData[7];
@@ -141,13 +143,13 @@ class KondoB3mServo{
     {
       angle = min_angle_*100;
     }
-    SetServoPosition(0x00, angle, target_time, sendData);
+    generateSetServoPositionCmd(0x00, angle, target_time, sendData);
     write(port->fd_, sendData, sizeof(sendData));
     read(port->fd_, receiveData, sizeof(receiveData));
     return 0;
   }
 
-  void SetServoPosition(unsigned char option, short angle, short target_time, unsigned char data[])
+  void generateSetServoPositionCmd(unsigned char option, short angle, short target_time, unsigned char data[])
   {
     data[0]  = (unsigned char)9; // SIZE
     data[1]  = (unsigned char)0x06;  // コマンド(write)
@@ -160,23 +162,18 @@ class KondoB3mServo{
     data[8]  = checksum(data, 8);// チェックサム
   }
 
-  int b3mReadPosition(SerialPort *port)
+  int readPosition(SerialPort *port)
   {
     unsigned char sendData[7] = {};
     unsigned char receiveData[7] = {};
     int check = 0;
-    SetServoRead(sendData);
+    generateReadServoPositionCmd(sendData);
     
     while(1){
-      // 受信バッファのフラッシュ
-      tcflush(port->fd_, TCIFLUSH);
-      // 送信バッファのフラッシュ
-      tcflush(port->fd_, TCOFLUSH);
+      tcflush(port->fd_, TCIFLUSH);      // 受信バッファのフラッシュ
+      tcflush(port->fd_, TCOFLUSH);      // 送信バッファのフラッシュ
       write(port->fd_, sendData, sizeof(sendData));
       read(port->fd_, receiveData, sizeof(receiveData));
-      // for (size_t i = 0; i < sizeof(receiveData); ++i) {
-      //   ROS_INFO("Data%d : %x", (int)i, receiveData[i]);
-      // }
       int check = checksum(receiveData, 6);
       if(check == receiveData[6])
       {
@@ -186,10 +183,11 @@ class KondoB3mServo{
     }
     // Data[4]が下位2bit, Data[5]が上位2bit
     int angle = hexa2dec(receiveData[4], receiveData[5]);
+    angle_ = (double)angle/100.0;
     return angle;
   }
 
-  void SetServoRead(unsigned char data[])
+  void generateReadServoPositionCmd(unsigned char data[])
   {
     data[0] = (unsigned char)0x07;
     data[1] = (unsigned char)0x03;
@@ -200,15 +198,11 @@ class KondoB3mServo{
     data[6] = checksum(data, 6);
   }
 
- private:  
-  unsigned char checksum(unsigned char data[], int num)
+  double getAngle()
   {
-    short sum = 0;
-    for (int i = 0; i < num; ++i) {
-      sum += data[i];
-    }
-    return (unsigned char)(sum&0x00FF); // SIZE~TIMEまでの総和の下位1Byte
+    return angle_;
   }
+  
 };
 
 class KondoB3mServoMultiCtrl
@@ -217,6 +211,8 @@ class KondoB3mServoMultiCtrl
   std::vector<boost::shared_ptr<KondoB3mServo> > actuator_vector_;
   int size_of_data_;
   int num_of_servo_;
+  boost::mutex access_mutex_;
+  
  public:
   KondoB3mServoMultiCtrl(std::vector<boost::shared_ptr<KondoB3mServo> > actuator_vector)
   {
@@ -225,14 +221,18 @@ class KondoB3mServoMultiCtrl
     size_of_data_ = actuator_vector_.size() * 3 + 6;
   }
   
-  void b3mSetPositionMulti(SerialPort *port, std::vector<short> angles, short target_time)
+  void setPositionMulti(SerialPort *port, std::vector<short> angles, short target_time)
   {
     unsigned char *sendData = new unsigned char[size_of_data_];
-    SetServoPositionMulti(0x00, num_of_servo_, angles, target_time, sendData);
-    write(port->fd_, sendData, size_of_data_);
+    setServoPositionMulti(0x00, num_of_servo_, angles, target_time, sendData);
+    {
+      boost::mutex::scoped_lock(access_mutex_);
+      write(port->fd_, sendData, size_of_data_);
+    }
+
   }
   
-  void SetServoPositionMulti(unsigned char option, int num, std::vector<short> angles, short target_time, unsigned char data[])
+  void setServoPositionMulti(unsigned char option, int num, std::vector<short> angles, short target_time, unsigned char data[])
   {
     data[0]  = (unsigned char)size_of_data_; // SIZE
     data[1]  = (unsigned char)0x06;  // コマンド(write)
@@ -254,16 +254,27 @@ class KondoB3mServoMultiCtrl
     data[3 + 3*num_of_servo_ + 1]  = (unsigned char)((target_time&0xFF00)>>8); // TIME_H
     data[size_of_data_ -1]  = checksum(data, size_of_data_-1);// チェックサム
   }
-  
-  unsigned char checksum(unsigned char data[], int num)
+
+  void readPositionMulti(SerialPort *port)
   {
-    short sum = 0;
-    for (int i = 0; i < num; ++i) {
-      sum += data[i];
+    {
+      boost::mutex::scoped_lock(access_mutex_);
+      for (size_t i = 0; i < actuator_vector_.size(); ++i) {
+	actuator_vector_[i]->readPosition(port);
+      }
     }
-    return (unsigned char)(sum&0x00FF); // SIZE~TIMEまでの総和の下位1Byte
   }
+
 };
+
+unsigned char checksum(unsigned char data[], int num)
+{
+  short sum = 0;
+  for (int i = 0; i < num; ++i) {
+    sum += data[i];
+  }
+  return (unsigned char)(sum&0x00FF); // SIZE~TIMEまでの総和の下位1Byte
+}
 
 int hexa2dec(unsigned char data1, unsigned char data2)
 {

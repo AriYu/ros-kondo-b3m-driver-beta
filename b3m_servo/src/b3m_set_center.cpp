@@ -14,8 +14,8 @@ class b3m_set_center
   b3m_set_center(std::string portName, int baudrate, int id)
       : port_(portName, baudrate), servo_("servo")
   {
-    servo_.b3mSetId(id);
-    int angle = servo_.b3mReadPosition(&port_);
+    servo_.setId(id);
+    int angle = servo_.readPosition(&port_);
     std::cout << "Angle :" << angle << std::endl;
   }
 
