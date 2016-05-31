@@ -184,6 +184,7 @@ class KondoB3mServo{
     // Data[4]が下位2bit, Data[5]が上位2bit
     int angle = hexa2dec(receiveData[4], receiveData[5]);
     angle_ = (double)angle/100.0;
+    angle_ = (angle_/180.0)*M_PI;
     return angle;
   }
 
