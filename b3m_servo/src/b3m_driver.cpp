@@ -18,11 +18,11 @@ class B3mServoDriver
       actuator_vector_.push_back(actuator);
       joint_states_.name.push_back(std::string(actuators_name[i]));
     }
-    
+
     joint_states_.position.resize(num);
     joint_states_.velocity.resize(num);
     joint_states_.effort.resize(num);
-   
+
     for (int i = 0; i < num; i++) {
       actuator_vector_[i]->setFreePosMode(&port_);
       usleep(10000);
@@ -33,7 +33,7 @@ class B3mServoDriver
       actuator_vector_[i]->setGainParam(&port_, 0x00);
       usleep(10000);
     }
-    
+
     angles_.resize(actuator_vector_.size());
     multi_ctrl_ = new KondoB3mServoMultiCtrl(actuator_vector_);
 
@@ -54,7 +54,7 @@ class B3mServoDriver
     multi_ctrl_->setPositionMulti(&port_, angles_, target_time);
     usleep(10000);
   }
-  
+
   void run()
   {
     while(nh_.ok())
@@ -67,7 +67,7 @@ class B3mServoDriver
 	}
 	joint_states_.header.stamp = ros::Time::now();
 	joint_state_pub_.publish(joint_states_);
-	
+
 	ros::spinOnce();
 	rate_.sleep();
       }
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "b3m_driver");
   ros::NodeHandle nh;
-  
+
   B3mServoDriver driver(nh, "/dev/ttyUSB0", B115200, argc-1, &argv[1]);
   driver.run();
 
