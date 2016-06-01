@@ -30,13 +30,16 @@ class B3mPlugin(Plugin):
             self._widget.setWindowTitle(self._widget.windowTitle() + (' %d ' % context.serial_number()))
         context.add_widget(self._widget)
         self._widget.cancelButton.clicked[bool].connect(self._handle_cancel_clicked)
-        self._widget.sendButton.clicked[bool].connect(self._handle_send_clicked)
+ 
 
         # Setting for Slider
         self._widget.targetPositionSlider.setMinimum(-320)
         self._widget.targetPositionSlider.setMaximum(320)
         self._widget.targetPositionSlider.setValue(0)
         self._widget.targetPositionSlider.valueChanged.connect(self._widget.lcdInputNumber.display)
+
+        # Setting for Lineedit for input target position
+        self._widget.lineEditTargetPosition.textChanged.connect(self._handle_update_lineedit_target)
         
     def shutdown_plugin(self):
         # unregister all publisher here
@@ -55,5 +58,5 @@ class B3mPlugin(Plugin):
     def _handle_cancel_clicked(self):
         print "cancelButton is clicked"
 
-    def _handle_send_clicked(self):
-        print "sendButton is clicked"
+    def _handle_update_lineedit_target(self, text):
+        self._widget.targetPositionSlider.setValue(int(text, 10))

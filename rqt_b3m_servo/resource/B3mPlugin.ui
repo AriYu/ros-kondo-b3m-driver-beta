@@ -25,19 +25,6 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QPushButton" name="sendButton">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>380</y>
-     <width>85</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>&amp;Send</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="cancelButton">
    <property name="geometry">
     <rect>
@@ -56,9 +43,20 @@
     <rect>
      <x>460</x>
      <y>360</y>
-     <width>151</width>
-     <height>23</height>
+     <width>161</width>
+     <height>51</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>20</pointsize>
+    </font>
+   </property>
+   <property name="smallDecimalPoint">
+    <bool>true</bool>
+   </property>
+   <property name="segmentStyle">
+    <enum>QLCDNumber::Flat</enum>
    </property>
   </widget>
   <widget class="QLabel" name="label">
@@ -273,7 +271,7 @@
    <property name="geometry">
     <rect>
      <x>80</x>
-     <y>230</y>
+     <y>250</y>
      <width>273</width>
      <height>29</height>
     </rect>
@@ -295,10 +293,21 @@
    <property name="geometry">
     <rect>
      <x>460</x>
-     <y>260</y>
-     <width>151</width>
-     <height>23</height>
+     <y>250</y>
+     <width>161</width>
+     <height>51</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>20</pointsize>
+    </font>
+   </property>
+   <property name="smallDecimalPoint">
+    <bool>true</bool>
+   </property>
+   <property name="segmentStyle">
+    <enum>QLCDNumber::Flat</enum>
    </property>
   </widget>
   <widget class="QLabel" name="label_5">
@@ -325,6 +334,19 @@
    </property>
    <property name="text">
     <string>Output[deg]</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>210</y>
+     <width>97</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Publish</string>
    </property>
   </widget>
  </widget>
