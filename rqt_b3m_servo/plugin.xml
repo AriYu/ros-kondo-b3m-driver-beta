@@ -1,0 +1,18 @@
+<library path="src">
+  <class name="b3m_servo Plugin" type="rqt_b3m_servo.b3m_module.B3mPlugin" base_class_type="rqt_gui_py::Plugin" >
+    <description>
+      An example Python GUI plugin to control Kondo B3M series serial servo motor.
+    </description>
+    <qtgui>
+      <group>
+	<label>B3mPlugin</label>
+      </group>
+      <!-- <group> -->
+      <!-- 	<label>Subgroup</label> -->
+      <!-- </group> -->
+      <label>My first Python Plugin</label>
+      <icon type="theme">system-help</icon>
+      <statustip>Great user interface to provide real value.</statustip>
+    </qtgui>
+  </class>
+</library>
