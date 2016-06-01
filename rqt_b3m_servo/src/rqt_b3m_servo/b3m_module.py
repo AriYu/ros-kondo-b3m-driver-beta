@@ -29,7 +29,15 @@ class B3mPlugin(Plugin):
         if context.serial_number() > 1:
             self._widget.setWindowTitle(self._widget.windowTitle() + (' %d ' % context.serial_number()))
         context.add_widget(self._widget)
+        self._widget.cancelButton.clicked[bool].connect(self._handle_cancel_clicked)
+        self._widget.sendButton.clicked[bool].connect(self._handle_send_clicked)
 
+        # Setting for Slider
+        self._widget.targetPositionSlider.setMinimum(-320)
+        self._widget.targetPositionSlider.setMaximum(320)
+        self._widget.targetPositionSlider.setValue(0)
+        self._widget.targetPositionSlider.valueChanged.connect(self._widget.lcdInputNumber.display)
+        
     def shutdown_plugin(self):
         # unregister all publisher here
         pass
@@ -43,3 +51,9 @@ class B3mPlugin(Plugin):
         # restore instrinsic configuration, usually using:
         # v = instance_settings.value(k)
         pass
+
+    def _handle_cancel_clicked(self):
+        print "cancelButton is clicked"
+
+    def _handle_send_clicked(self):
+        print "sendButton is clicked"
